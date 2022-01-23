@@ -25,6 +25,8 @@ namespace WebMVC
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+            services.AddControllersWithViews() // добавление поддержки контроллеров и представлений (MVC)
+                .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0).AddSessionStateTempDataProvider(); // соместимость с asp.net core 3.0
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,19 +43,16 @@ namespace WebMVC
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseStaticFiles();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello");
-                });
+                endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }
