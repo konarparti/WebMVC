@@ -1,4 +1,5 @@
-﻿<meta charset="utf-8" />
+﻿@using WebMVC.Service
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 @if(ViewBag.Title != null)
 {
@@ -6,12 +7,12 @@
 }
 else
 {
-    <title>No title</title>
+    <title>@Config.CompanyName</title>
 }
 
 @if(ViewBag.Description != null)
 {
-    <meta name="description" content="@ViewBag.Description"/ >
+    <meta name="description" content="@ViewBag.Description" />
 }
 @if(ViewBag.KeyWords != null)
 {

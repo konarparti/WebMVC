@@ -1,32 +1,61 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using WebMVC.Domain;
+using WebMVC.Domain.Repositories.Abstract;
+using WebMVC.Domain.Repositories.EntityFramework;
+using WebMVC.Service;
 
 namespace WebMVC
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
+        public IConfiguration Configuration { get; set; }
+        public Startup(IConfiguration configuration) => Configuration = configuration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddRazorPages();
+            //services.AddRazorPages();
+            //подключаем конфиг из appsettings.json
+            Configuration.Bind("Project", new Config());
+
+            //подключение нужного функционала приложения в качестве сервисов
+            services.AddTransient<ITextFieldsRepository, EFTextFieldsRepository>();
+            services.AddTransient<IServiceItemsRepository, EFServiceItemsRepository>();
+            services.AddTransient<DataManager>();
+
+            //подключение контекста БД
+            services.AddDbContext<AppDbContext>(x => x.UseSqlServer(Config.ConnectionString));
+
+            //настройка identity system
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+                options.User.RequireUniqueEmail = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireDigit = false;
+            }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+
+            //настройка authentication cookie
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "konarpartiIncAuth";
+                options.Cookie.HttpOnly = true;
+                options.LoginPath = "/account/login";
+                options.AccessDeniedPath = "/account/accessdenied";
+                options.SlidingExpiration = true;
+            });
+
             services.AddControllersWithViews() // добавление поддержки контроллеров и представлений (MVC)
                 .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0).AddSessionStateTempDataProvider(); // соместимость с asp.net core 3.0
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,9 +73,14 @@ namespace WebMVC
             }
 
             //app.UseHttpsRedirection();
+            app.UseStaticFiles(); // статичные файлы - js css sass
+            app.UseRouting(); // система маршрутизации
 
-            app.UseRouting();
-            app.UseStaticFiles();
+            //аутентификация и авторизация
+            app.UseCookiePolicy();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            
 
             //app.UseAuthorization();
 
