@@ -53,7 +53,16 @@ namespace WebMVC
                 options.SlidingExpiration = true;
             });
 
-            services.AddControllersWithViews() // добавление поддержки контроллеров и представлений (MVC)
+            //настройка политики авторизации для admin area
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminArea", policy => { policy.RequireRole("admin"); });
+            });
+
+            services.AddControllersWithViews(options =>
+            {
+                options.Conventions.Add(new AdminAreaAuthorization("Admin", "AdminArea"));
+            }) // добавление поддержки контроллеров и представлений (MVC)
                 .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Version_3_0).AddSessionStateTempDataProvider(); // соместимость с asp.net core 3.0
 
         }
@@ -80,12 +89,10 @@ namespace WebMVC
             app.UseCookiePolicy();
             app.UseAuthentication();
             app.UseAuthorization();
-            
-
-            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllerRoute("admin", "{area:exists}/{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
             });
         }
