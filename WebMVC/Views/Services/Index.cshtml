@@ -8,9 +8,16 @@
     ViewBag.Keywords = textField.MetaKeywords;
 }
 
+<h2>@textField.Title</h2>
+<div>
+    @Html.Raw(textField.Text)
+</div>
+
 <div>
     @if (Model.Any())
     {
+
+        
         <ul class="big-image-list">
             @foreach(ServiceItem entity in Model)
             {
@@ -20,6 +27,7 @@
                     </a>
                     <h4>@entity.Title</h4>
                     <p>@entity.Subtitle</p>
+                    <p>@entity.DateAdded</p>
                 </li>
             }
         </ul>
